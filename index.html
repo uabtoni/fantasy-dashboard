@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mercado · Panel Fantasy</title>
+<meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -908,6 +909,7 @@ function render() {
           <div class="player-cell">
             <img class="player-avatar" src="${p.photo_url || ''}" alt=""
                  onerror="this.style.visibility='hidden'"
+                 referrerpolicy="no-referrer"
                  loading="lazy">
             <button class="name-btn" data-chart="${p.id}">${escapeHtml(p.name || '—')}</button>
             ${chollo ? '<span class="chollo-badge" title="Chollo: barato para su posición y buena probabilidad de jugar"></span>' : ''}
@@ -1192,7 +1194,7 @@ function renderComparePage() {
     return `
       <div class="compare-card">
         <button class="cremove" data-remove="${p.id}" title="Quitar">×</button>
-        <img class="cavatar" src="${p.photo_url || ''}" alt="" onerror="this.style.visibility='hidden'">
+        <img class="cavatar" src="${p.photo_url || ''}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
         <div class="cname">${escapeHtml(p.name)}</div>
         <div class="cteam">${escapeHtml(p.team || '—')}</div>
         <span class="pos-badge ${posClass}">${escapeHtml(p.position || '—')}</span>
