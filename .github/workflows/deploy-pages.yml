@@ -1,0 +1,42 @@
+name: Desplegar Dashboard en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Permite relanzar el despliegue a mano desde la pestaña "Actions" sin
+  # necesidad de un push nuevo (útil si algo falla y quieres reintentar).
+  workflow_dispatch:
+
+# Permisos mínimos que necesita el job para publicar en Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Solo una publicación a la vez; si llega un push nuevo mientras hay una
+# en curso, se cancela la anterior en vez de acumular despliegues en cola.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir el sitio como artefacto
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
