@@ -25,6 +25,8 @@
     --blue-dim: rgba(63,140,255,0.14);
     --yellow:#f2c230;
     --yellow-dim: rgba(242,194,48,0.14);
+    --orange:#ff8a3d;
+    --orange-dim: rgba(255,138,61,0.14);
     --radius: 10px;
   }
   *{box-sizing:border-box;}
@@ -294,7 +296,10 @@
   thead th .arrow{font-size:10px; margin-left:3px; opacity:0.7;}
   tbody tr{border-bottom:1px solid var(--line); transition:background .12s ease;}
   tbody tr:hover{background:var(--panel);}
-  td{padding:9px 14px; font-size:14px; vertical-align:middle;}
+  tbody tr.compare-selected{ background: var(--red-dim); }
+  tbody tr.compare-selected:hover{ background: var(--red-dim); }
+  tbody tr.compare-selected td.sticky-col{ background: var(--red-dim); box-shadow: inset 3px 0 0 0 var(--red); }
+  td{padding:15px 14px; font-size:14px; vertical-align:middle;}
   td.name{font-weight:600;}
   td.team{color:var(--chalk-dim); font-size:13px;}
   td.price{font-family:'IBM Plex Mono'; font-weight:600; color:var(--yellow); text-align:right; font-size:14.5px; text-shadow:0 0 10px rgba(242,194,48,0.25);}
@@ -310,15 +315,32 @@
     padding:3px 8px; border-radius:5px;
     border:1px solid var(--line);
   }
-  .pos-Portero{color:var(--chalk); border-color:rgba(245,245,245,0.30); background:rgba(245,245,245,0.05);}
-  .pos-Defensa{color:var(--purple); border-color:rgba(138,92,246,0.40); background:var(--purple-dim);}
-  .pos-Centrocampista{color:var(--blue); border-color:rgba(63,140,255,0.40); background:var(--blue-dim);}
-  .pos-Delantero{color:var(--yellow); border-color:rgba(242,194,48,0.45); background:var(--yellow-dim);}
+  .pos-badge.pos-Portero{color:var(--chalk); border-color:rgba(245,245,245,0.30); background:rgba(245,245,245,0.05);}
+  .pos-badge.pos-Defensa{color:var(--purple); border-color:rgba(138,92,246,0.40); background:var(--purple-dim);}
+  .pos-badge.pos-Centrocampista{color:var(--blue); border-color:rgba(63,140,255,0.40); background:var(--blue-dim);}
+  .pos-badge.pos-Delantero{color:var(--yellow); border-color:rgba(242,194,48,0.45); background:var(--yellow-dim);}
 
   .status-dot{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--chalk-dim);}
   .status-dot i{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px rgba(47,174,102,0.6); display:inline-block;}
+  .status-dot.duda i{background:var(--yellow); box-shadow:0 0 8px rgba(242,194,48,0.6);}
+  .status-dot.duda{color:var(--yellow);}
   .status-dot.hurt i{background:var(--red);}
   .status-dot.hurt{color:var(--red);}
+  .status-dot.touched i{background:var(--blue); box-shadow:0 0 8px rgba(63,140,255,0.6);}
+  .status-dot.touched{color:var(--blue);}
+
+  .prob-badge{
+    display:inline-block; font-family:'IBM Plex Mono'; font-weight:600; font-size:12px;
+    padding:3px 8px; border-radius:5px;
+    border:1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .prob-badge.prob-red{color:var(--red); border-color:rgba(226,33,28,0.40); background:var(--red-dim);}
+  .prob-badge.prob-orange{color:var(--orange); border-color:rgba(255,138,61,0.40); background:var(--orange-dim);}
+  .prob-badge.prob-yellow{color:var(--yellow); border-color:rgba(242,194,48,0.45); background:var(--yellow-dim);}
+  .prob-badge.prob-green{color:var(--green); border-color:rgba(47,174,102,0.40); background:var(--green-dim);}
+  .prob-badge.prob-blue{color:var(--blue); border-color:rgba(63,140,255,0.40); background:var(--blue-dim);}
+  .prob-badge.prob-none{color:var(--chalk-dim); border-color:var(--line); background:transparent;}
 
   .empty-state{
     text-align:center; padding: 60px 20px; color:var(--chalk-dim);
@@ -345,19 +367,19 @@
   .pick-btn.active{background:var(--red); border-color:var(--red); color:#fff;}
 
   .chollo-badge{
-    display:inline-block; width:7px; height:7px; border-radius:50%;
-    background:var(--green); box-shadow:0 0 8px rgba(47,174,102,0.7); margin-left:6px;
+    display:inline-block; font-size:13px; line-height:1; margin-left:6px;
+    filter: drop-shadow(0 0 4px rgba(255,140,0,0.6));
+    cursor:help;
   }
 
   td.rival{color:var(--chalk-dim); font-size:12.5px; white-space:nowrap;}
-  td.rival .prob{font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--chalk-dim);}
 
   .name-btn{background:none; border:none; padding:0; color:inherit; font:inherit; font-weight:600; cursor:pointer; text-align:left;}
   .name-btn:hover{color:var(--red);}
 
   .player-cell{display:flex; align-items:center; gap:12px;}
   .player-avatar{
-    width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0;
+    width:58px; height:58px; border-radius:50%; object-fit:cover; flex-shrink:0;
     background:var(--panel-2); border:1px solid var(--line);
   }
 
@@ -444,16 +466,213 @@
 
   #chart-svg-wrap{width:100%; overflow-x:auto;}
 
-  /* ---------- Mi equipo ---------- */
-  #myteam-panel{
-    margin: 0 clamp(16px,4vw,48px) 8px;
-    padding:16px 18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-    display:none; gap:22px; flex-wrap:wrap; align-items:center;
+  /* ============================================================
+     PÁGINA MI EQUIPO
+     ============================================================ */
+  #myteam-page{
+    display:none;
+    min-height:100vh;
+    background: var(--ink);
   }
-  #myteam-panel.show{display:flex;}
-  #myteam-panel .mt-stat{font-family:'IBM Plex Mono'; font-size:13px; color:var(--chalk-dim);}
-  #myteam-panel .mt-stat b{color:var(--chalk); font-size:16px; display:block;}
-  #myteam-panel .mt-stat.over b{color:var(--red);}
+  #myteam-page.show{display:block;}
+
+  .myteam-header{
+    padding: 24px clamp(16px,4vw,48px) 18px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    position:sticky; top:0; background:var(--ink); z-index:5;
+  }
+  .myteam-header h2{
+    font-family:'Barlow Condensed'; text-transform:uppercase; letter-spacing:0.03em;
+    font-size:26px; margin:0;
+  }
+  .myteam-counter{
+    margin-left:auto; font-family:'IBM Plex Mono'; font-size:13px; color:var(--chalk-dim);
+  }
+  .myteam-counter b{color:var(--chalk); font-size:15px;}
+  .myteam-counter b.full{color:var(--yellow);}
+  .myteam-counter b.formacion-ok{color:var(--green);}
+  .myteam-counter b.formacion-mal{color:var(--red);}
+
+  .myteam-body{ padding: 26px clamp(16px,4vw,48px) 60px; max-width:1320px; margin:0 auto; }
+
+  .myteam-field-row{
+    display:grid; grid-template-columns: minmax(0,1fr) 400px; gap:24px; align-items:start;
+  }
+
+  /* ---------- El campo: hierba negra, líneas blancas ---------- */
+  .pitch-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 800 / 620;
+    border-radius:18px;
+    overflow:hidden;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.028) 0 46px, transparent 46px 92px),
+      radial-gradient(ellipse at 50% 28%, #161616 0%, #0a0a0a 65%, #000000 100%);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 80px rgba(0,0,0,0.6);
+    border:1px solid rgba(255,255,255,0.10);
+  }
+  .pitch-lines{ position:absolute; inset:0; width:100%; height:100%; opacity:0.9; }
+  .pitch-rows{
+    position:relative; z-index:2;
+    height:100%; padding: 34px 26px 26px;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .pitch-row{
+    display:flex; justify-content:space-evenly; align-items:flex-start; flex-wrap:wrap;
+    gap:8px; min-height:92px;
+  }
+  .pitch-row-empty::before{
+    content: attr(data-label);
+    color:rgba(255,255,255,0.32); font-family:'Barlow Condensed'; text-transform:uppercase;
+    letter-spacing:0.08em; font-size:12px; margin:auto;
+  }
+
+  .pitch-chip{
+    display:flex; flex-direction:column; align-items:center; width:104px;
+    text-align:center; position:relative;
+  }
+  .pitch-chip .pc-avatar-wrap{ position:relative; }
+  .pitch-chip .pc-avatar{
+    width:68px; height:68px; border-radius:50%; object-fit:cover;
+    background:var(--panel-2); border:2px solid rgba(255,255,255,0.14);
+    box-shadow:0 6px 14px rgba(0,0,0,0.6);
+  }
+  .bench-chip .bc-avatar{
+    width:48px; height:48px; border-radius:50%; object-fit:cover; background:var(--panel-2);
+    border:2px solid rgba(255,255,255,0.14); flex-shrink:0;
+  }
+
+  /* Aura difuminada por posición: sin anillo duro, solo un halo suave
+     que se disuelve hacia fuera (box-shadow con mucho blur y poco spread) */
+  .pos-Portero .pc-avatar, .pos-Portero .bc-avatar{
+    box-shadow: 0 0 34px 6px rgba(232,232,232,0.55);
+  }
+  .pos-Defensa .pc-avatar, .pos-Defensa .bc-avatar{
+    box-shadow: 0 0 34px 6px rgba(138,92,246,0.6);
+  }
+  .pos-Centrocampista .pc-avatar, .pos-Centrocampista .bc-avatar{
+    box-shadow: 0 0 34px 6px rgba(63,140,255,0.6);
+  }
+  .pos-Delantero .pc-avatar, .pos-Delantero .bc-avatar{
+    box-shadow: 0 0 34px 6px rgba(242,194,48,0.6);
+  }
+
+  .pc-bench-btn{
+    position:absolute; bottom:0px; right:-2px; width:26px; height:26px; border-radius:50%;
+    background:var(--red); border:2.5px solid var(--ink); color:#fff;
+    font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center;
+    padding:0; box-shadow:0 3px 8px rgba(0,0,0,0.5);
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .pc-bench-btn:hover{ transform:scale(1.12); filter:brightness(1.1); }
+  .pc-bench-btn:active{ transform:scale(0.94); }
+
+  .pc-name{
+    color:#fff; font-size:13.5px; font-weight:700; margin-top:7px; line-height:1.2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    max-width:104px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .pc-price{
+    font-family:'IBM Plex Mono'; font-size:12px; color:var(--yellow); margin-top:1px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  }
+
+  /* ---------- Banquillo (columna vertical, a la derecha del campo) ---------- */
+  .bench-column{
+    display:flex; flex-direction:column; gap:18px;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; height:100%;
+  }
+  .bench-column-title{
+    font-family:'Barlow Condensed'; text-transform:uppercase; letter-spacing:0.04em;
+    font-size:15px; color:var(--chalk-dim); margin:0 0 4px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .bench-group + .bench-group{ padding-top:14px; border-top:1px solid var(--line); }
+  .bench-group-title{
+    font-family:'Barlow Condensed'; text-transform:uppercase; letter-spacing:0.05em;
+    font-size:11.5px; color:var(--chalk-dim); margin:0 0 10px;
+  }
+  .bench-group-list{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .bench-group-empty{ font-size:12px; color:rgba(245,245,245,0.28); font-style:italic; grid-column:1 / -1; }
+
+  .bench-chip{
+    display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+    padding:12px 8px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
+    position:relative; /* ancla para el aviso flotante */
+    transition: border-color .15s ease;
+  }
+  .bench-chip .bc-info{ min-width:0; width:100%; }
+  .bench-chip .bc-nameline{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; }
+  .bench-chip .bc-name{ font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+  .bench-chip .bc-price{ font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--yellow); display:block; margin-top:3px; }
+
+  .mini-pos-badge{
+    font-family:'Barlow Condensed'; font-weight:700; font-size:10px; letter-spacing:0.03em;
+    padding:2px 6px; border-radius:4px; border:1px solid var(--line); line-height:1.5;
+  }
+
+  .bc-promote{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:38px; height:38px; border-radius:50%;
+    background:var(--green-dim); border:1.5px solid rgba(47,174,102,0.5); color:var(--green);
+    font-size:17px;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .bc-promote:hover{ background:var(--green); color:#07220f; transform:scale(1.1); }
+  .bc-promote:active{ transform:scale(0.94); }
+  .bc-promote.blocked{
+    background:rgba(245,245,245,0.05); border-color:var(--line); color:var(--chalk-dim);
+  }
+  .bc-promote.blocked:hover{ background:rgba(245,245,245,0.08); color:var(--chalk-dim); transform:none; }
+
+  /* Aviso flotante cuando una acción no está permitida (posición al tope) */
+  .inline-toast{
+    position:absolute; bottom:calc(100% + 8px); left:50%;
+    transform:translateX(-50%) translateY(6px);
+    background:var(--panel-2); border:1px solid var(--red); color:var(--chalk);
+    font-size:11.5px; font-weight:500; padding:7px 12px; border-radius:8px;
+    white-space:nowrap; box-shadow:0 10px 24px rgba(0,0,0,0.55);
+    opacity:0; pointer-events:none; z-index:30;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .inline-toast::after{
+    content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:var(--red);
+  }
+  .inline-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @keyframes shakeX{
+    10%,90%{transform:translateX(-2px);} 20%,80%{transform:translateX(3px);}
+    30%,50%,70%{transform:translateX(-5px);} 40%,60%{transform:translateX(5px);}
+  }
+  .shake{ animation: shakeX .45s ease; border-color:var(--red) !important; }
+
+  .myteam-empty{
+    text-align:center; padding:70px 20px; color:var(--chalk-dim);
+  }
+  .myteam-empty .display{ font-size:22px; color:var(--chalk); margin-bottom:8px; }
+
+  /* ---------- Resumen ---------- */
+  .myteam-summary{
+    margin-top:30px; display:flex; gap:0; border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .ms-cell{
+    flex:1; padding:18px 20px; border-left:1px solid var(--line); text-align:center;
+  }
+  .ms-cell:first-child{ border-left:none; }
+  .ms-cell .ms-label{
+    font-family:'Barlow Condensed'; text-transform:uppercase; letter-spacing:0.06em;
+    font-size:11.5px; color:var(--chalk-dim); margin-bottom:6px;
+  }
+  .ms-cell .ms-value{ font-family:'IBM Plex Mono'; font-weight:600; font-size:22px; color:var(--yellow); }
+  .ms-cell .ms-value.diff-up{ color:var(--green); }
+  .ms-cell .ms-value.diff-down{ color:var(--red); }
+  .ms-cell .ms-value.diff-flat{ color:var(--chalk-dim); }
 
   /* ============================================================
      RESPONSIVE
@@ -482,8 +701,13 @@
     .filters{ position:static; padding:14px 16px; }
     thead th{ position:static; }
 
-    #myteam-panel{ margin:0 16px 8px; padding:14px; }
-    #btn-myteam-only{ margin-left:0 !important; width:100%; }
+    #myteam-page .myteam-header{ padding:18px 16px 14px; }
+    .myteam-body{ padding:20px 16px 50px; }
+    .myteam-field-row{ grid-template-columns: 1fr; }
+    .bench-column{ flex-direction:row; flex-wrap:wrap; gap:16px 24px; }
+    .bench-group{ flex:1 1 260px; }
+    .bench-group + .bench-group{ border-top:none; padding-top:0; }
+    #btn-myteam-only{ width:100%; }
 
     .table-wrap{ padding: 4px 0 40px; }
     table{ min-width: 720px; }
@@ -520,8 +744,12 @@
     button, select, input{ min-height:40px; } /* objetivo táctil cómodo */
     .pick-btn, .star-btn{ min-height:auto; width:26px; height:26px; }
 
-    #myteam-panel{ gap:14px; }
-    #myteam-panel .mt-stat{ min-width:42%; }
+    .pitch-chip{ width:60px; }
+    .pitch-chip .pc-avatar{ width:38px; height:38px; }
+    .pc-name{ font-size:10px; max-width:60px; }
+    .myteam-summary{ flex-direction:column; }
+    .ms-cell{ border-left:none; border-top:1px solid var(--line); }
+    .ms-cell:first-child{ border-top:none; }
 
     .compare-card{ flex-basis: 78vw; }
     .compare-card .cavatar{ width:96px; height:96px; }
@@ -613,9 +841,10 @@
     <option value="Delantero">Delantero</option>
   </select>
   <select id="filter-status">
-    <option value="">Disponibles y lesionados</option>
+    <option value="">Todos los estados</option>
     <option value="Disponible">Solo disponibles</option>
-    <option value="Lesionado/Duda">Solo lesionados / duda</option>
+    <option value="Duda">Solo duda</option>
+    <option value="Lesionado">Solo lesionados</option>
   </select>
   <div class="price-range">
     <span>€</span>
@@ -624,19 +853,10 @@
     <input id="price-max" type="number" placeholder="Máx" min="0" step="100000">
   </div>
   <button class="ghost" id="btn-fav-filter">☆ Favoritos</button>
-  <button class="ghost" id="btn-myteam-toggle">Mi equipo</button>
+  <button class="ghost" id="btn-myteam-only">Ver solo mi equipo</button>
+  <button class="ghost" id="btn-myteam-toggle">📋 Mi equipo</button>
   <button class="ghost" id="btn-reset">Limpiar filtros</button>
   <div class="count-pill"><b id="count-shown">0</b> / <span id="count-total">0</span></div>
-</div>
-
-<div id="myteam-panel">
-  <div class="mt-stat"><b id="mt-count">0 / 15</b>Jugadores en tu equipo</div>
-  <div class="mt-stat"><b id="mt-value">€0</b>Valor total</div>
-  <div class="mt-stat"><b id="mt-por">0</b>Porteros</div>
-  <div class="mt-stat"><b id="mt-def">0</b>Defensas</div>
-  <div class="mt-stat"><b id="mt-med">0</b>Centrocampistas</div>
-  <div class="mt-stat"><b id="mt-del">0</b>Delanteros</div>
-  <button class="ghost" id="btn-myteam-only" style="margin-left:auto;">Ver solo mi equipo</button>
 </div>
 
 <div class="table-wrap">
@@ -649,6 +869,7 @@
         <th data-key="team">Equipo <span class="arrow"></span></th>
         <th data-key="position">Posición <span class="arrow"></span></th>
         <th data-key="status">Estado <span class="arrow"></span></th>
+        <th data-key="start_probability" style="text-align:center">Prob. <span class="arrow"></span></th>
         <th>Próx. rival</th>
         <th data-key="price" style="text-align:right">Precio <span class="arrow"></span></th>
       </tr>
@@ -689,6 +910,61 @@
   <div class="compare-track" id="compare-track"></div>
 </section>
 
+<!-- ============================================================
+     PÁGINA MI EQUIPO
+     ============================================================ -->
+<section id="myteam-page">
+  <div class="myteam-header">
+    <button class="ghost" id="btn-myteam-back">← Volver al mercado</button>
+    <h2>Mi Equipo</h2>
+    <div class="myteam-counter">
+      Titulares <b id="mt2-titulares">0/11</b>
+      <span style="margin:0 4px; opacity:0.3;">·</span>
+      Formación <b id="mt2-formacion">—</b>
+    </div>
+  </div>
+
+  <div class="myteam-body" id="myteam-body">
+    <div class="myteam-field-row">
+      <div class="pitch-wrap">
+        <svg class="pitch-lines" viewBox="0 0 800 580" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="792" height="572" fill="none" stroke="white" stroke-width="3"/>
+          <line x1="4" y1="290" x2="796" y2="290" stroke="white" stroke-width="3"/>
+          <circle cx="400" cy="290" r="70" fill="none" stroke="white" stroke-width="3"/>
+          <circle cx="400" cy="290" r="4" fill="white"/>
+          <rect x="220" y="4" width="360" height="110" fill="none" stroke="white" stroke-width="3"/>
+          <rect x="300" y="4" width="200" height="45" fill="none" stroke="white" stroke-width="3"/>
+          <path d="M330 114 A70 70 0 0 0 470 114" fill="none" stroke="white" stroke-width="3"/>
+          <rect x="220" y="466" width="360" height="110" fill="none" stroke="white" stroke-width="3"/>
+          <rect x="300" y="531" width="200" height="45" fill="none" stroke="white" stroke-width="3"/>
+          <path d="M330 466 A70 70 0 0 1 470 466" fill="none" stroke="white" stroke-width="3"/>
+        </svg>
+        <div class="pitch-rows" id="pitch-rows"></div>
+      </div>
+
+      <div class="bench-column">
+        <div class="bench-column-title">🪑 Banquillo</div>
+        <div id="bench-groups"></div>
+      </div>
+    </div>
+
+    <div class="myteam-summary">
+      <div class="ms-cell">
+        <div class="ms-label">Jugadores</div>
+        <div class="ms-value" id="ms-count" style="color:var(--chalk);">0 / 15</div>
+      </div>
+      <div class="ms-cell">
+        <div class="ms-label">Valor total plantilla</div>
+        <div class="ms-value" id="ms-value">€0</div>
+      </div>
+      <div class="ms-cell">
+        <div class="ms-label">Variación hoy</div>
+        <div class="ms-value" id="ms-today">—</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -715,15 +991,17 @@ const els = {
   countTotal: document.getElementById('count-total'),
   statTotal: document.getElementById('stat-total'),
   btnFavFilter: document.getElementById('btn-fav-filter'),
-  btnMyteamToggle: document.getElementById('btn-myteam-toggle'),
   btnMyteamOnly: document.getElementById('btn-myteam-only'),
-  myteamPanel: document.getElementById('myteam-panel'),
-  mtCount: document.getElementById('mt-count'),
-  mtValue: document.getElementById('mt-value'),
-  mtPor: document.getElementById('mt-por'),
-  mtDef: document.getElementById('mt-def'),
-  mtMed: document.getElementById('mt-med'),
-  mtDel: document.getElementById('mt-del'),
+  btnMyteamToggle: document.getElementById('btn-myteam-toggle'),
+  btnMyteamBack: document.getElementById('btn-myteam-back'),
+  myteamPage: document.getElementById('myteam-page'),
+  pitchRows: document.getElementById('pitch-rows'),
+  benchGroups: document.getElementById('bench-groups'),
+  mt2Titulares: document.getElementById('mt2-titulares'),
+  mt2Formacion: document.getElementById('mt2-formacion'),
+  msCount: document.getElementById('ms-count'),
+  msValue: document.getElementById('ms-value'),
+  msToday: document.getElementById('ms-today'),
   compareBar: document.getElementById('compare-bar'),
   compareCount: document.getElementById('compare-count'),
   btnCompareOpen: document.getElementById('btn-compare-open'),
@@ -745,6 +1023,7 @@ let supabaseClient = null;
 
 const MAX_TEAM = 15;
 const MAX_COMPARE = 8;
+const MAX_TITULARES = 11;
 
 function loadSet(key) {
   try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
@@ -753,10 +1032,17 @@ function loadSet(key) {
 function saveSet(key, set) {
   localStorage.setItem(key, JSON.stringify([...set]));
 }
+function loadRoles() {
+  try { return JSON.parse(localStorage.getItem('ff_myteam_roles') || '{}'); }
+  catch { return {}; }
+}
+function saveRoles() {
+  localStorage.setItem('ff_myteam_roles', JSON.stringify(myTeamRoles));
+}
 let favorites = loadSet('ff_favorites');
 let myTeam = loadSet('ff_myteam');
-let compareSelection = loadSet('ff_compare_temp'); // se reinicia cada carga, no persiste entre sesiones
-compareSelection = new Set();
+let myTeamRoles = loadRoles(); // { playerId: 'titular' | 'banquillo' }
+let compareSelection = new Set();
 
 const fmtPrice = (n) => (n || 0).toLocaleString('es-ES');
 
@@ -797,7 +1083,6 @@ async function loadPlayers() {
     els.banner.classList.remove('show');
     populateTeamFilter();
     updateScoreboard();
-    updateMyTeamPanel();
     render();
   } catch (e) {
     console.error(e);
@@ -831,7 +1116,7 @@ function getFiltered() {
     if (q && !(p.name || '').toLowerCase().includes(q)) return false;
     if (team && p.team !== team) return false;
     if (position && p.position !== position) return false;
-    if (status && p.status !== status) return false;
+    if (status && !(p.status || 'Disponible').startsWith(status)) return false;
     if (min !== null && (p.price || 0) < min) return false;
     if (max !== null && (p.price || 0) > max) return false;
     if (onlyFavorites && !favorites.has(p.id)) return false;
@@ -841,7 +1126,7 @@ function getFiltered() {
 
   out.sort((a, b) => {
     let va = a[sortKey], vb = b[sortKey];
-    if (sortKey === 'price') { va = va || 0; vb = vb || 0; }
+    if (sortKey === 'price' || sortKey === 'start_probability') { va = va || 0; vb = vb || 0; }
     else { va = (va || '').toString().toLowerCase(); vb = (vb || '').toString().toLowerCase(); }
     if (va < vb) return sortDir === 'asc' ? -1 : 1;
     if (va > vb) return sortDir === 'asc' ? 1 : -1;
@@ -890,7 +1175,9 @@ function render() {
   const thresholds = priceThresholdsByPosition();
 
   els.rows.innerHTML = filtered.map(p => {
-    const hurt = p.status === 'Lesionado/Duda';
+    const hurt = p.status === 'Lesionado';
+    const duda = p.status === 'Duda';
+    const touched = !hurt && !duda && !!p.touched;
     const posClass = 'pos-' + (p.position || '').replace(/\s/g, '');
     const isFav = favorites.has(p.id);
     const inTeam = myTeam.has(p.id);
@@ -899,7 +1186,10 @@ function render() {
     const rivalTxt = p.next_rival
       ? `${p.next_rival} ${p.rival_home === true ? '(Casa)' : p.rival_home === false ? '(Fuera)' : ''}`
       : '—';
-    const probTxt = (p.start_probability != null) ? `<span class="prob">${p.start_probability}%</span>` : '';
+    const probPct = p.start_probability;
+    const probTxt = (probPct != null)
+      ? `<span class="prob-badge ${probColorClass(probPct)}">${probPct}%</span>`
+      : `<span class="prob-badge prob-none">—</span>`;
 
     return `
       <tr data-id="${p.id}">
@@ -912,13 +1202,14 @@ function render() {
                  referrerpolicy="no-referrer"
                  loading="lazy">
             <button class="name-btn" data-chart="${p.id}">${escapeHtml(p.name || '—')}</button>
-            ${chollo ? '<span class="chollo-badge" title="Chollo: barato para su posición y buena probabilidad de jugar"></span>' : ''}
+            ${chollo ? '<span class="chollo-badge" title="Chollo: barato para su posición y buena probabilidad de jugar">🔥</span>' : ''}
           </div>
         </td>
         <td class="team">${escapeHtml(p.team || '—')}</td>
         <td><span class="pos-badge ${posClass}">${escapeHtml(p.position || '—')}</span></td>
-        <td><span class="status-dot ${hurt ? 'hurt' : ''}"><i></i>${escapeHtml(p.status || 'Disponible')}</span></td>
-        <td class="rival">${escapeHtml(rivalTxt)} ${probTxt}</td>
+        <td><span class="status-dot ${hurt ? 'hurt' : duda ? 'duda' : touched ? 'touched' : ''}" ${touched ? 'title="Tocado, pero disponible"' : ''}><i></i>${escapeHtml(p.status || 'Disponible')}</span></td>
+        <td style="text-align:center">${probTxt}</td>
+        <td class="rival">${escapeHtml(rivalTxt)}</td>
         <td class="price ${(!p.price || p.price === 0) ? 'zero' : ''}">
           ${p.price ? '€' + fmtPrice(p.price) : '—'}
           ${p.price ? buildDiffHtml(p.price_diff) : ''}
@@ -950,12 +1241,13 @@ function wireRowButtons() {
       const id = btn.dataset.team;
       if (myTeam.has(id)) {
         myTeam.delete(id);
+        delete myTeamRoles[id];
+        saveRoles();
       } else {
         if (myTeam.size >= MAX_TEAM) { alert(`Tu equipo ya tiene ${MAX_TEAM} jugadores.`); return; }
         myTeam.add(id);
       }
       saveSet('ff_myteam', myTeam);
-      updateMyTeamPanel();
       render();
     });
   });
@@ -975,9 +1267,18 @@ function wireRowButtons() {
         compareSelection.add(id);
       }
       updateCompareBar();
-      tr.style.outline = compareSelection.has(id) ? '1px solid var(--red)' : 'none';
+      tr.classList.toggle('compare-selected', compareSelection.has(id));
     });
   });
+}
+
+function probColorClass(pct) {
+  if (pct == null) return 'prob-none';
+  if (pct <= 20) return 'prob-red';      // 0% - 20% (20 incluido)
+  if (pct < 50) return 'prob-orange';    // 20% - 50% (ninguno incluido)
+  if (pct <= 60) return 'prob-yellow';   // 50% - 60% (ambos incluidos)
+  if (pct < 90) return 'prob-green';     // 60% - 90% (90 no incluido)
+  return 'prob-blue';                    // 90% - 100%
 }
 
 function escapeHtml(str) {
@@ -1123,20 +1424,75 @@ els.btnBackLanding.addEventListener('click', () => {
   }, 800);
 });
 
-// ---------- Mi equipo ----------
-function updateMyTeamPanel() {
-  const jugadores = allPlayers.filter(p => myTeam.has(p.id));
-  const total = jugadores.reduce((sum, p) => sum + (p.price || 0), 0);
-  els.mtCount.textContent = `${jugadores.length} / ${MAX_TEAM}`;
-  els.mtValue.textContent = '€' + fmtPrice(total);
-  els.mtPor.textContent = jugadores.filter(p => p.position === 'Portero').length;
-  els.mtDef.textContent = jugadores.filter(p => p.position === 'Defensa').length;
-  els.mtMed.textContent = jugadores.filter(p => p.position === 'Centrocampista').length;
-  els.mtDel.textContent = jugadores.filter(p => p.position === 'Delantero').length;
+// ---------- Mi equipo: navegación a la página del campo ----------
+const POS_ORDER = ['Delantero', 'Centrocampista', 'Defensa', 'Portero'];
+const POS_LABEL = { Delantero: 'Delanteros', Centrocampista: 'Centrocampistas', Defensa: 'Defensas', Portero: 'Portero' };
+
+// Reglas oficiales de alineación gratuita: con estos topes por posición
+// (y el portero fijo a 1), las únicas combinaciones alcanzables son
+// exactamente las 7 formaciones clásicas permitidas.
+const POSITION_LIMITS = {
+  Portero: { min: 1, max: 1 },
+  Defensa: { min: 3, max: 5 },
+  Centrocampista: { min: 3, max: 5 },
+  Delantero: { min: 1, max: 3 },
+};
+const FORMACIONES_VALIDAS = new Set(['3-4-3', '3-5-2', '4-3-3', '4-4-2', '4-5-1', '5-3-2', '5-4-1']);
+
+function getRole(id) {
+  return myTeamRoles[id] === 'titular' ? 'titular' : 'banquillo';
+}
+
+function countTitulares() {
+  return [...myTeam].filter(id => getRole(id) === 'titular').length;
+}
+
+function countTitularesPorPosicion(position) {
+  return [...myTeam].filter(id => {
+    if (getRole(id) !== 'titular') return false;
+    const p = allPlayers.find(pl => pl.id === id);
+    return p && p.position === position;
+  }).length;
+}
+
+function formacionActual() {
+  return [
+    countTitularesPorPosicion('Defensa'),
+    countTitularesPorPosicion('Centrocampista'),
+    countTitularesPorPosicion('Delantero'),
+  ].join('-');
+}
+
+function setRole(id, role) {
+  if (role === 'titular') {
+    const btnRef = document.querySelector(`[data-titular="${id}"]`);
+
+    if (countTitulares() >= MAX_TITULARES) {
+      if (btnRef) mostrarAvisoBloqueado(btnRef, `Ya tienes ${MAX_TITULARES} titulares`);
+      return;
+    }
+    const player = allPlayers.find(p => p.id === id);
+    const limite = POSITION_LIMITS[player?.position];
+    if (limite && countTitularesPorPosicion(player.position) >= limite.max) {
+      if (btnRef) mostrarAvisoBloqueado(btnRef, `Máximo ${limite.max} ${POS_LABEL[player.position].toLowerCase()}`);
+      return;
+    }
+  }
+  myTeamRoles[id] = role;
+  saveRoles();
+  renderMyTeamPage();
 }
 
 els.btnMyteamToggle.addEventListener('click', () => {
-  els.myteamPanel.classList.toggle('show');
+  renderMyTeamPage();
+  els.app.style.display = 'none';
+  els.myteamPage.classList.add('show');
+  window.scrollTo(0, 0);
+});
+
+els.btnMyteamBack.addEventListener('click', () => {
+  els.myteamPage.classList.remove('show');
+  els.app.style.display = 'block';
 });
 
 els.btnMyteamOnly.addEventListener('click', () => {
@@ -1145,6 +1501,195 @@ els.btnMyteamOnly.addEventListener('click', () => {
   els.btnMyteamOnly.textContent = onlyMyTeam ? 'Ver todos' : 'Ver solo mi equipo';
   render();
 });
+
+function pitchChipHtml(p) {
+  const posClass = 'pos-' + (p.position || '').replace(/\s/g, '');
+  return `
+    <div class="pitch-chip ${posClass}">
+      <div class="pc-avatar-wrap">
+        <img class="pc-avatar" src="${p.photo_url || ''}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
+        <button class="pc-bench-btn" data-bench="${p.id}" title="Pasar al banquillo">↓</button>
+      </div>
+      <div class="pc-name">${escapeHtml(p.name || '—')}</div>
+      <div class="pc-price">${p.price ? '€' + fmtPrice(p.price) : '—'}</div>
+    </div>`;
+}
+
+const POS_ABBR = { Portero: 'POR', Defensa: 'DEF', Centrocampista: 'CEN', Delantero: 'DEL' };
+
+function benchChipHtml(p) {
+  const limite = POSITION_LIMITS[p.position];
+  const posLlena = limite && countTitularesPorPosicion(p.position) >= limite.max;
+  const bloqueado = countTitulares() >= MAX_TITULARES || posLlena;
+  const motivo = posLlena
+    ? `Ya tienes el máximo de ${POS_LABEL[p.position].toLowerCase()} (${limite.max})`
+    : (countTitulares() >= MAX_TITULARES ? `Ya tienes ${MAX_TITULARES} titulares` : '');
+  const posClass = 'pos-' + (p.position || '').replace(/\s/g, '');
+  return `
+    <div class="bench-chip ${posClass}">
+      <img class="bc-avatar" src="${p.photo_url || ''}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="bc-nameline">
+          <span class="bc-name">${escapeHtml(p.name || '—')}</span>
+          <span class="mini-pos-badge pos-badge ${posClass}">${POS_ABBR[p.position] || ''}</span>
+        </div>
+        <span class="bc-price">${p.price ? '€' + fmtPrice(p.price) : '—'}</span>
+      </div>
+      <button class="bc-promote ${bloqueado ? 'blocked' : ''}" data-titular="${p.id}" data-motivo="${escapeHtml(motivo)}" title="${bloqueado ? motivo : 'Poner de titular'}">↑</button>
+    </div>`;
+}
+
+function renderMyTeamPage() {
+  const jugadores = allPlayers.filter(p => myTeam.has(p.id));
+
+  if (jugadores.length === 0) {
+    els.myteamBody = els.myteamBody || document.getElementById('myteam-body');
+    document.getElementById('myteam-body').innerHTML = `
+      <div class="myteam-empty">
+        <div class="display">Todavía no tienes jugadores</div>
+        <div>Vuelve al mercado y pulsa el botón "+" en las filas que quieras fichar.</div>
+      </div>`;
+    els.mt2Titulares.textContent = `0/${MAX_TITULARES}`;
+    els.mt2Formacion.textContent = '—';
+    els.mt2Formacion.className = '';
+    return;
+  }
+
+  // Por si el contenido se sustituyó antes por el estado vacío, lo restauramos
+  if (!document.getElementById('pitch-rows')) {
+    document.getElementById('myteam-body').innerHTML = `
+      <div class="myteam-field-row">
+        <div class="pitch-wrap">
+          <svg class="pitch-lines" viewBox="0 0 800 580" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="792" height="572" fill="none" stroke="white" stroke-width="3"/>
+            <line x1="4" y1="290" x2="796" y2="290" stroke="white" stroke-width="3"/>
+            <circle cx="400" cy="290" r="70" fill="none" stroke="white" stroke-width="3"/>
+            <circle cx="400" cy="290" r="4" fill="white"/>
+            <rect x="220" y="4" width="360" height="110" fill="none" stroke="white" stroke-width="3"/>
+            <rect x="300" y="4" width="200" height="45" fill="none" stroke="white" stroke-width="3"/>
+            <path d="M330 114 A70 70 0 0 0 470 114" fill="none" stroke="white" stroke-width="3"/>
+            <rect x="220" y="466" width="360" height="110" fill="none" stroke="white" stroke-width="3"/>
+            <rect x="300" y="531" width="200" height="45" fill="none" stroke="white" stroke-width="3"/>
+            <path d="M330 466 A70 70 0 0 1 470 466" fill="none" stroke="white" stroke-width="3"/>
+          </svg>
+          <div class="pitch-rows" id="pitch-rows"></div>
+        </div>
+        <div class="bench-column">
+          <div class="bench-column-title">🪑 Banquillo</div>
+          <div id="bench-groups"></div>
+        </div>
+      </div>
+      <div class="myteam-summary">
+        <div class="ms-cell"><div class="ms-label">Jugadores</div><div class="ms-value" id="ms-count" style="color:var(--chalk);">0 / 15</div></div>
+        <div class="ms-cell"><div class="ms-label">Valor total plantilla</div><div class="ms-value" id="ms-value">€0</div></div>
+        <div class="ms-cell"><div class="ms-label">Variación hoy</div><div class="ms-value" id="ms-today">—</div></div>
+      </div>`;
+    els.pitchRows = document.getElementById('pitch-rows');
+    els.benchGroups = document.getElementById('bench-groups');
+    els.msCount = document.getElementById('ms-count');
+    els.msValue = document.getElementById('ms-value');
+    els.msToday = document.getElementById('ms-today');
+  }
+
+  const titulares = jugadores.filter(p => getRole(p.id) === 'titular');
+  const banquillo = jugadores.filter(p => getRole(p.id) !== 'titular');
+
+  // Campo: una fila por posición, en orden de ataque a portería propia
+  els.pitchRows.innerHTML = POS_ORDER.map(pos => {
+    const enFila = titulares.filter(p => p.position === pos);
+    if (enFila.length === 0) {
+      return `<div class="pitch-row pitch-row-empty" data-label="${POS_LABEL[pos]}"></div>`;
+    }
+    return `<div class="pitch-row">${enFila.map(pitchChipHtml).join('')}</div>`;
+  }).join('');
+
+  // Banquillo: agrupado por posición, en columna vertical junto al campo
+  els.benchGroups.innerHTML = POS_ORDER.map(pos => {
+    const enGrupo = banquillo.filter(p => p.position === pos);
+    const lista = enGrupo.length
+      ? enGrupo.map(benchChipHtml).join('')
+      : '<div class="bench-group-empty">Nadie aquí</div>';
+    return `
+      <div class="bench-group">
+        <div class="bench-group-title">${POS_LABEL[pos]}</div>
+        <div class="bench-group-list">${lista}</div>
+      </div>`;
+  }).join('');
+
+  // Contadores y resumen
+  els.mt2Titulares.textContent = `${titulares.length}/${MAX_TITULARES}`;
+
+  const formacion = formacionActual();
+  els.mt2Formacion.textContent = titulares.length > 0 ? formacion : '—';
+  els.mt2Formacion.className = '';
+  els.mt2Formacion.title = '';
+  if (titulares.length === MAX_TITULARES) {
+    const esValida = FORMACIONES_VALIDAS.has(formacion);
+    els.mt2Formacion.classList.add(esValida ? 'formacion-ok' : 'formacion-mal');
+    if (!esValida) {
+      const [d, m, f] = formacion.split('-').map(Number);
+      const faltas = [];
+      if (d < 3) faltas.push('mínimo 3 defensas');
+      if (m < 3) faltas.push('mínimo 3 centrocampistas');
+      if (f < 1) faltas.push('mínimo 1 delantero');
+      els.mt2Formacion.title = faltas.length
+        ? `Formación no permitida: necesitas ${faltas.join(' y ')}.`
+        : 'Formación no permitida en las alineaciones gratuitas.';
+    }
+  }
+
+  els.msCount.textContent = `${jugadores.length} / ${MAX_TEAM}`;
+
+  const valorTotal = jugadores.reduce((sum, p) => sum + (p.price || 0), 0);
+  els.msValue.textContent = '€' + fmtPrice(valorTotal);
+
+  const variacionHoy = jugadores.reduce((sum, p) => sum + (p.price_diff || 0), 0);
+  const cls = variacionHoy > 0 ? 'diff-up' : variacionHoy < 0 ? 'diff-down' : 'diff-flat';
+  const arrow = variacionHoy > 0 ? '▲' : variacionHoy < 0 ? '▼' : '—';
+  const signo = variacionHoy > 0 ? '+' : variacionHoy < 0 ? '−' : '';
+  els.msToday.className = 'ms-value ' + cls;
+  els.msToday.textContent = variacionHoy === 0
+    ? '— sin cambios'
+    : `${arrow} ${signo}€${fmtPrice(Math.abs(variacionHoy))}`;
+
+  // Listeners de los botones de subir/bajar de titular ↔ banquillo
+  document.querySelectorAll('[data-bench]').forEach(btn => {
+    btn.addEventListener('click', () => setRole(btn.dataset.bench, 'banquillo'));
+  });
+  document.querySelectorAll('[data-titular]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('blocked')) {
+        mostrarAvisoBloqueado(btn, btn.dataset.motivo || 'No se puede poner de titular');
+        return;
+      }
+      setRole(btn.dataset.titular, 'titular');
+    });
+  });
+}
+
+function mostrarAvisoBloqueado(btn, mensaje) {
+  const chip = btn.closest('.bench-chip');
+  if (!chip) return;
+
+  chip.classList.remove('shake');
+  void chip.offsetWidth; // fuerza el reinicio de la animación si se hace clic varias veces seguidas
+  chip.classList.add('shake');
+  setTimeout(() => chip.classList.remove('shake'), 450);
+
+  const anterior = chip.querySelector('.inline-toast');
+  if (anterior) anterior.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'inline-toast';
+  toast.textContent = mensaje;
+  chip.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 200);
+  }, 1800);
+}
 
 els.btnFavFilter.addEventListener('click', () => {
   onlyFavorites = !onlyFavorites;
@@ -1162,7 +1707,7 @@ function updateCompareBar() {
 els.btnCompareClear.addEventListener('click', () => {
   compareSelection.clear();
   updateCompareBar();
-  document.querySelectorAll('tbody tr').forEach(tr => tr.style.outline = 'none');
+  document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('compare-selected'));
 });
 
 els.btnCompareOpen.addEventListener('click', () => {
@@ -1186,7 +1731,9 @@ function renderComparePage() {
   }
 
   els.compareTrack.innerHTML = jugadores.map(p => {
-    const hurt = p.status === 'Lesionado/Duda';
+    const hurt = p.status === 'Lesionado';
+    const duda = p.status === 'Duda';
+    const touched = !hurt && !duda && !!p.touched;
     const posClass = 'pos-' + (p.position || '').replace(/\s/g, '');
     const rivalTxt = p.next_rival
       ? `${p.next_rival} ${p.rival_home === true ? '(Casa)' : p.rival_home === false ? '(Fuera)' : ''}`
@@ -1203,7 +1750,7 @@ function renderComparePage() {
           <dd>${p.price ? '€' + fmtPrice(p.price) : '—'}</dd>
           <dd>${p.price ? buildDiffHtml(p.price_diff) : ''}</dd>
           <dt>Estado</dt>
-          <dd><span class="status-dot ${hurt ? 'hurt' : ''}"><i></i>${escapeHtml(p.status || 'Disponible')}</span></dd>
+          <dd><span class="status-dot ${hurt ? 'hurt' : duda ? 'duda' : touched ? 'touched' : ''}" ${touched ? 'title="Tocado, pero disponible"' : ''}><i></i>${escapeHtml(p.status || 'Disponible')}</span></dd>
           <dt>Próximo rival</dt>
           <dd>${escapeHtml(rivalTxt)}${p.start_probability != null ? ' · ' + p.start_probability + '%' : ''}</dd>
         </dl>
@@ -1216,7 +1763,7 @@ function renderComparePage() {
       updateCompareBar();
       renderComparePage();
       document.querySelectorAll('tbody tr').forEach(tr => {
-        if (tr.dataset.id === btn.dataset.remove) tr.style.outline = 'none';
+        if (tr.dataset.id === btn.dataset.remove) tr.classList.remove('compare-selected');
       });
     });
   });
