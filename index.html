@@ -476,6 +476,56 @@
   }
   #myteam-page.show{display:block;}
 
+  /* ============================================================
+     PÁGINA MERCADO DE MI LIGA
+     ============================================================ */
+  #leaguemarket-page{
+    display:none;
+    min-height:100vh;
+    background: var(--ink);
+  }
+  #leaguemarket-page.show{display:block;}
+
+  .leaguemarket-header{
+    padding: 24px clamp(16px,4vw,48px) 18px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    position:sticky; top:0; background:var(--ink); z-index:5;
+  }
+  .leaguemarket-header h2{ margin:0; font-family:'Barlow Condensed'; text-transform:uppercase; letter-spacing:0.03em; }
+  .leaguemarket-sub{ color:var(--chalk-dim); font-size:13px; margin-top:2px; }
+
+  .expiry-badge{ font-size:12px; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+  .expiry-badge.urgent{ background:var(--red-dim); color:var(--red); }
+  .expiry-badge.soon{ background:var(--yellow-dim); color:var(--yellow); }
+  .expiry-badge.normal{ background:var(--panel-2); color:var(--chalk-dim); }
+
+  #financas-page{
+    display:none;
+    min-height:100vh;
+    background: var(--ink);
+  }
+  #financas-page.show{display:block;}
+
+  .financas-disclaimer{
+    margin: 16px clamp(16px,4vw,48px) 0;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--yellow-dim);
+    color: var(--chalk);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .financas-disclaimer b{ color: var(--yellow); }
+
+  .money-badge{ font-size:12px; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+  .money-badge.plausible{ background:var(--panel-2); color:var(--chalk-dim); }
+  .money-badge.implausible{ background:var(--red-dim); color:var(--red); }
+
+  .owner-badge{ font-size:12px; padding:2px 8px; border-radius:20px; white-space:nowrap; background:var(--purple-dim); color:var(--purple); cursor:help; }
+  .owner-badge.free{ background:transparent; color:var(--chalk-dim); opacity:0.5; }
+  .owner-badge.shielded{ background:var(--blue-dim); color:var(--blue); }
+
   .myteam-header{
     padding: 24px clamp(16px,4vw,48px) 18px;
     border-bottom:1px solid var(--line);
@@ -855,6 +905,8 @@
   <button class="ghost" id="btn-fav-filter">☆ Favoritos</button>
   <button class="ghost" id="btn-myteam-only">Ver solo mi equipo</button>
   <button class="ghost" id="btn-myteam-toggle">📋 Mi equipo</button>
+  <button class="ghost" id="btn-leaguemarket-toggle">🏷️ Mercado de mi liga</button>
+  <button class="ghost" id="btn-financas-toggle">💰 Finanzas de la liga</button>
   <button class="ghost" id="btn-reset">Limpiar filtros</button>
   <div class="count-pill"><b id="count-shown">0</b> / <span id="count-total">0</span></div>
 </div>
@@ -965,6 +1017,89 @@
   </div>
 </section>
 
+<!-- ============================================================
+     PÁGINA MERCADO DE MI LIGA
+     (privado, ofertas reales con precio/pujas/caducidad -- viene de
+     league_market, sincronizada por scraper/sync_league_market.py
+     contra la API oficial de LaLiga Fantasy, distinto de `players`
+     que es el mercado público de toda LaLiga)
+     ============================================================ -->
+<section id="leaguemarket-page">
+  <div class="leaguemarket-header">
+    <button class="ghost" id="btn-leaguemarket-back">← Volver al mercado</button>
+    <div>
+      <h2>Mercado de tu liga</h2>
+      <div class="leaguemarket-sub" id="leaguemarket-sub">Cargando...</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:26px;"></th>
+          <th class="sticky-col">Jugador</th>
+          <th>Posición</th>
+          <th style="text-align:right">Precio de venta</th>
+          <th style="text-align:right">Valor de mercado</th>
+          <th style="text-align:center">Pujas</th>
+          <th>Caduca</th>
+          <th>Propietario</th>
+        </tr>
+      </thead>
+      <tbody id="leaguemarket-rows"></tbody>
+    </table>
+    <div class="empty-state" id="leaguemarket-empty" style="display:none;">
+      <div class="display">Sin datos todavía</div>
+      <div id="leaguemarket-empty-msg">No se encontraron ofertas en el mercado de tu liga.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PÁGINA FINANZAS DE LA LIGA (tabla league_manager_finances,
+     sincronizada por scraper/sync_league_activity.py)
+     ============================================================ -->
+<section id="financas-page">
+  <div class="leaguemarket-header">
+    <button class="ghost" id="btn-financas-back">← Volver al mercado</button>
+    <div>
+      <h2>Finanzas de la liga</h2>
+      <div class="leaguemarket-sub" id="financas-sub">Cargando...</div>
+    </div>
+  </div>
+
+  <div class="financas-disclaimer">
+    <b>⚠️ Dinero estimado, no oficial.</b> LaLiga Fantasy solo permite consultar el saldo real de
+    <b>tu propio</b> equipo — para el resto de managers la API responde 403 Forbidden. Esta cifra se
+    reconstruye sumando todas las compras/ventas/ganancias del historial de la liga a partir de un
+    presupuesto inicial asumido igual para todos. Un saldo negativo no es, por sí solo, un error: el
+    mercado permite endeudarte hasta el 20% del valor de tu plantilla (lo que no se puede es pagar a
+    otro manager sin tener el dinero). Si un manager sale marcado como "no fiable" es porque su estimado
+    quedó por DEBAJO de ese límite — señal de que el presupuesto inicial asumido no encaja para él.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sticky-col">Manager</th>
+          <th style="text-align:right">Dinero estimado</th>
+          <th style="text-align:right">Valor de plantilla</th>
+          <th style="text-align:right">Gastado</th>
+          <th style="text-align:right">Ingresado</th>
+          <th>Fiabilidad</th>
+        </tr>
+      </thead>
+      <tbody id="financas-rows"></tbody>
+    </table>
+    <div class="empty-state" id="financas-empty" style="display:none;">
+      <div class="display">Sin datos todavía</div>
+      <div id="financas-empty-msg">No se encontraron finanzas para tu liga.</div>
+    </div>
+  </div>
+</section>
+
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -995,6 +1130,20 @@ const els = {
   btnMyteamToggle: document.getElementById('btn-myteam-toggle'),
   btnMyteamBack: document.getElementById('btn-myteam-back'),
   myteamPage: document.getElementById('myteam-page'),
+  btnLeagueMarketToggle: document.getElementById('btn-leaguemarket-toggle'),
+  btnLeagueMarketBack: document.getElementById('btn-leaguemarket-back'),
+  leagueMarketPage: document.getElementById('leaguemarket-page'),
+  leagueMarketSub: document.getElementById('leaguemarket-sub'),
+  leagueMarketRows: document.getElementById('leaguemarket-rows'),
+  leagueMarketEmpty: document.getElementById('leaguemarket-empty'),
+  leagueMarketEmptyMsg: document.getElementById('leaguemarket-empty-msg'),
+  btnFinancasToggle: document.getElementById('btn-financas-toggle'),
+  btnFinancasBack: document.getElementById('btn-financas-back'),
+  financasPage: document.getElementById('financas-page'),
+  financasSub: document.getElementById('financas-sub'),
+  financasRows: document.getElementById('financas-rows'),
+  financasEmpty: document.getElementById('financas-empty'),
+  financasEmptyMsg: document.getElementById('financas-empty-msg'),
   pitchRows: document.getElementById('pitch-rows'),
   benchGroups: document.getElementById('bench-groups'),
   mt2Titulares: document.getElementById('mt2-titulares'),
@@ -1069,6 +1218,63 @@ function saveConnection(url, key) {
   localStorage.setItem('ff_supabase_key', key);
 }
 
+// ---------- Quién tiene fichado a cada jugador (tabla league_roster) ----------
+// rosterByPlayerId: cruce EXACTO por id oficial (usado en el mercado de tu
+// liga, league_market -- viene de la misma API oficial, mismo espacio de ids).
+// rosterByName: cruce por nombre normalizado (usado en el mercado público,
+// `players`, que viene de futbolfantasy.com y no comparte ids con la API
+// oficial -- mejor esfuerzo, mismo criterio que normalizar() en
+// scraper/futbolfantasy_scraper.py / scraper/league_data.py).
+let rosterByPlayerId = new Map();
+let rosterByName = new Map();
+
+function normalizarNombre(str) {
+  return (str || '')
+    .toString()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+async function loadLeagueRoster() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('league_roster').select('*');
+    if (error) throw error;
+    rosterByPlayerId = new Map();
+    rosterByName = new Map();
+    (data || []).forEach(p => {
+      if (p.player_id) rosterByPlayerId.set(String(p.player_id), p);
+      const key = normalizarNombre(p.player_name);
+      if (key) rosterByName.set(key, p);
+      const key2 = normalizarNombre(p.nickname);
+      if (key2) rosterByName.set(key2, p);
+    });
+    // Re-pintar lo que ya estuviera en pantalla para que aparezcan las etiquetas.
+    render();
+    if (leagueMarketLoaded) renderLeagueMarket();
+  } catch (e) {
+    // No es critico -- el resto de la web sigue funcionando sin las etiquetas
+    // de "quién lo tiene" (p.ej. si aún no se ha creado/poblado la tabla).
+    console.warn('No se pudo cargar league_roster:', e.message || e);
+  }
+}
+
+function ownerBadgeHtml(ownerRow) {
+  if (!ownerRow) return '<span class="owner-badge free">Libre</span>';
+  const cls = ownerRow.shielded ? 'owner-badge shielded' : 'owner-badge';
+  const clause = ownerRow.buyout_clause ? '€' + fmtPrice(ownerRow.buyout_clause) : '—';
+  const locked = ownerRow.clause_locked_until
+    ? ` · bloqueada hasta ${new Date(ownerRow.clause_locked_until).toLocaleString('es-ES')}`
+    : '';
+  const shieldTxt = ownerRow.shielded ? ' · 🛡️ blindado' : '';
+  const title = `Cláusula: ${clause}${locked}${shieldTxt}`;
+  const icon = ownerRow.shielded ? '🛡️ ' : '🔒 ';
+  return `<span class="${cls}" title="${escapeHtml(title)}">${icon}${escapeHtml(ownerRow.manager_name)}</span>`;
+}
+
 async function loadPlayers() {
   const { url, key } = getConnection();
   if (!url || !key) {
@@ -1084,6 +1290,7 @@ async function loadPlayers() {
     populateTeamFilter();
     updateScoreboard();
     render();
+    loadLeagueRoster();
   } catch (e) {
     console.error(e);
     els.banner.classList.add('show');
@@ -1190,6 +1397,10 @@ function render() {
     const probTxt = (probPct != null)
       ? `<span class="prob-badge ${probColorClass(probPct)}">${probPct}%</span>`
       : `<span class="prob-badge prob-none">—</span>`;
+    // Solo se pinta si esta fichado por alguien de TU liga -- para el resto
+    // de los ~650 jugadores de todo LaLiga no aporta nada mostrar "Libre".
+    const ownerRow = rosterByName.get(normalizarNombre(p.name));
+    const ownerHtml = ownerRow ? ownerBadgeHtml(ownerRow) : '';
 
     return `
       <tr data-id="${p.id}">
@@ -1203,6 +1414,7 @@ function render() {
                  loading="lazy">
             <button class="name-btn" data-chart="${p.id}">${escapeHtml(p.name || '—')}</button>
             ${chollo ? '<span class="chollo-badge" title="Chollo: barato para su posición y buena probabilidad de jugar">🔥</span>' : ''}
+            ${ownerHtml}
           </div>
         </td>
         <td class="team">${escapeHtml(p.team || '—')}</td>
@@ -1284,6 +1496,177 @@ function probColorClass(pct) {
 function escapeHtml(str) {
   return str.toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// ---------- Mercado de mi liga (tabla league_market) ----------
+let leagueMarket = [];
+let leagueMarketLoaded = false;
+
+function formatExpiry(iso) {
+  if (!iso) return { text: '—', cls: 'normal' };
+  const target = new Date(iso);
+  if (isNaN(target)) return { text: '—', cls: 'normal' };
+  const diffMs = target - new Date();
+  const dateTxt = target.toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  if (diffMs <= 0) return { text: `Caducada (${dateTxt})`, cls: 'urgent' };
+  const hours = diffMs / 3_600_000;
+  const rel = hours < 1 ? `en ${Math.round(diffMs / 60_000)} min` : hours < 24 ? `en ${Math.round(hours)} h` : `en ${Math.round(hours / 24)} d`;
+  const cls = hours < 3 ? 'urgent' : hours < 24 ? 'soon' : 'normal';
+  return { text: `${rel} · ${dateTxt}`, cls };
+}
+
+async function loadLeagueMarket() {
+  if (!supabaseClient) return;
+  els.leagueMarketSub.textContent = 'Cargando...';
+  try {
+    const { data, error } = await supabaseClient
+      .from('league_market')
+      .select('*')
+      .order('expiration_date', { ascending: true });
+    if (error) throw error;
+    leagueMarket = data || [];
+    leagueMarketLoaded = true;
+    renderLeagueMarket();
+  } catch (e) {
+    console.error(e);
+    els.leagueMarketRows.innerHTML = '';
+    els.leagueMarketEmpty.style.display = 'block';
+    els.leagueMarketEmptyMsg.textContent =
+      'No se pudo cargar el mercado de tu liga: ' + (e.message || e) +
+      '. Comprueba que la tabla "league_market" existe (ver database/migrations/002_add_league_market.sql) ' +
+      'y que has ejecutado scraper/sync_league_market.py al menos una vez.';
+    els.leagueMarketSub.textContent = '';
+  }
+}
+
+function renderLeagueMarket() {
+  if (leagueMarket.length === 0) {
+    els.leagueMarketRows.innerHTML = '';
+    els.leagueMarketEmpty.style.display = 'block';
+    els.leagueMarketEmptyMsg.textContent = 'No se encontraron ofertas en el mercado de tu liga.';
+    els.leagueMarketSub.textContent = '0 jugadores en venta';
+    return;
+  }
+  els.leagueMarketEmpty.style.display = 'none';
+
+  const lastSync = leagueMarket.reduce((max, p) => {
+    const t = p.last_synced ? new Date(p.last_synced) : null;
+    return t && (!max || t > max) ? t : max;
+  }, null);
+  els.leagueMarketSub.textContent =
+    `${leagueMarket.length} jugadores en venta` +
+    (lastSync ? ` · Última sincronización: ${lastSync.toLocaleString('es-ES')}` : '');
+
+  els.leagueMarketRows.innerHTML = leagueMarket.map(p => {
+    const posClass = 'pos-' + (p.position || '').replace(/\s/g, '');
+    const expiry = formatExpiry(p.expiration_date);
+    // Cruce EXACTO por player_id: league_market y league_roster vienen los
+    // dos de la API oficial, mismo espacio de ids (a diferencia del cruce
+    // por nombre que hace falta para el mercado público en render()).
+    const ownerRow = p.player_id ? rosterByPlayerId.get(String(p.player_id)) : null;
+    return `
+      <tr>
+        <td><img class="player-avatar" src="${p.image_url || ''}" alt=""
+             onerror="this.style.visibility='hidden'" referrerpolicy="no-referrer" loading="lazy"></td>
+        <td class="name sticky-col">${escapeHtml(p.player_name || '—')}</td>
+        <td><span class="pos-badge ${posClass}">${escapeHtml(p.position || '—')}</span></td>
+        <td class="price" style="text-align:right">€${fmtPrice(p.sale_price)}</td>
+        <td style="text-align:right">€${fmtPrice(p.market_value)}</td>
+        <td style="text-align:center">${p.number_of_bids || 0}</td>
+        <td><span class="expiry-badge ${expiry.cls}">${expiry.text}</span></td>
+        <td>${ownerBadgeHtml(ownerRow)}</td>
+      </tr>`;
+  }).join('');
+}
+
+els.btnLeagueMarketToggle.addEventListener('click', () => {
+  els.app.style.display = 'none';
+  els.leagueMarketPage.classList.add('show');
+  window.scrollTo(0, 0);
+  if (!leagueMarketLoaded) loadLeagueMarket();
+  else renderLeagueMarket();
+});
+
+els.btnLeagueMarketBack.addEventListener('click', () => {
+  els.leagueMarketPage.classList.remove('show');
+  els.app.style.display = 'block';
+});
+
+// ---------- Finanzas de la liga (tabla league_manager_finances) ----------
+let leagueFinances = [];
+let leagueFinancesLoaded = false;
+
+async function loadLeagueFinances() {
+  if (!supabaseClient) return;
+  els.financasSub.textContent = 'Cargando...';
+  try {
+    const { data, error } = await supabaseClient
+      .from('league_manager_finances')
+      .select('*')
+      .order('estimated_money', { ascending: false });
+    if (error) throw error;
+    leagueFinances = data || [];
+    leagueFinancesLoaded = true;
+    renderLeagueFinances();
+  } catch (e) {
+    console.error(e);
+    els.financasRows.innerHTML = '';
+    els.financasEmpty.style.display = 'block';
+    els.financasEmptyMsg.textContent =
+      'No se pudo cargar las finanzas de tu liga: ' + (e.message || e) +
+      '. Comprueba que la tabla "league_manager_finances" existe ' +
+      '(ver database/migrations/004_add_league_activity_and_finances.sql) ' +
+      'y que has ejecutado scraper/sync_league_activity.py al menos una vez.';
+    els.financasSub.textContent = '';
+  }
+}
+
+function renderLeagueFinances() {
+  if (leagueFinances.length === 0) {
+    els.financasRows.innerHTML = '';
+    els.financasEmpty.style.display = 'block';
+    els.financasEmptyMsg.textContent = 'No se encontraron finanzas para tu liga.';
+    els.financasSub.textContent = '0 managers';
+    return;
+  }
+  els.financasEmpty.style.display = 'none';
+
+  const lastSync = leagueFinances.reduce((max, f) => {
+    const t = f.last_synced ? new Date(f.last_synced) : null;
+    return t && (!max || t > max) ? t : max;
+  }, null);
+  els.financasSub.textContent =
+    `${leagueFinances.length} managers` +
+    (lastSync ? ` · Última sincronización: ${lastSync.toLocaleString('es-ES')}` : '');
+
+  els.financasRows.innerHTML = leagueFinances.map(f => {
+    const badgeCls = f.is_plausible ? 'plausible' : 'implausible';
+    const badgeTxt = f.is_plausible
+      ? (f.has_unverified_events ? 'Estimado (incluye eventos sin verificar)' : 'Estimado')
+      : 'No fiable (supera el 20% de deuda permitido)';
+    return `
+      <tr>
+        <td class="name sticky-col">${escapeHtml(f.manager_name || '—')}</td>
+        <td style="text-align:right">€${fmtPrice(f.estimated_money)}</td>
+        <td style="text-align:right">€${fmtPrice(f.team_value)}</td>
+        <td style="text-align:right">€${fmtPrice(f.total_spent)}</td>
+        <td style="text-align:right">€${fmtPrice(f.total_income)}</td>
+        <td><span class="money-badge ${badgeCls}">${badgeTxt}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+els.btnFinancasToggle.addEventListener('click', () => {
+  els.app.style.display = 'none';
+  els.financasPage.classList.add('show');
+  window.scrollTo(0, 0);
+  if (!leagueFinancesLoaded) loadLeagueFinances();
+  else renderLeagueFinances();
+});
+
+els.btnFinancasBack.addEventListener('click', () => {
+  els.financasPage.classList.remove('show');
+  els.app.style.display = 'block';
+});
 
 document.querySelectorAll('thead th').forEach(th => {
   th.addEventListener('click', () => {
