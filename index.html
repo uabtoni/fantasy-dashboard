@@ -28,6 +28,15 @@
     --orange:#ff8a3d;
     --orange-dim: rgba(255,138,61,0.14);
     --radius: 10px;
+    /* Alturas reales de header/.filters, medidas por JS (ver ResizeObserver
+       al final del script) -- estos valores son solo el fallback para el
+       primer frame, antes de que el observer las haya medido una vez. Antes
+       estaban hardcodeadas como top:96px / top:150px en header/thead y se
+       desincronizaban en cuanto .filters pasaba a ocupar 2 líneas (bastantes
+       botones + inputs, pasa en la práctica en anchos intermedios), dejando
+       la cabecera de la tabla montada encima de las filas al hacer scroll. */
+    --header-h: 96px;
+    --filters-h: 54px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -244,7 +253,7 @@
   .filters{
     display:flex; gap:10px; flex-wrap:wrap; align-items:center;
     padding: 16px clamp(16px,4vw,48px);
-    position:sticky; top:96px; z-index:15;
+    position:sticky; top:var(--header-h); z-index:15;
     background: rgba(10,10,10,0.92);
     backdrop-filter: blur(6px);
     border-bottom:1px solid var(--line);
@@ -277,10 +286,31 @@
   .count-pill b{color:var(--chalk);}
 
   /* ---------- Table ---------- */
-  .table-wrap{padding: 4px clamp(16px,4vw,48px) 48px;}
+  /* position:relative de base (no condicionado a ancho) -- lo necesita el
+     degradado ::after de aviso de scroll horizontal, definido justo abajo
+     pero activado solo en el breakpoint móvil (ver @media max-width:900px
+     más abajo, con la explicación completa de por qué no puede ser global). */
+  .table-wrap{padding: 4px clamp(16px,4vw,48px) 48px; position:relative;}
+  /* Aviso de que la tabla se puede deslizar en horizontal -- sin esto, en
+     pantallas estrechas se ve como si la tabla simplemente cortara columnas
+     (precio, estado...) por la derecha sin ninguna pista de que hay más
+     deslizando. La regla vive aquí siempre, pero solo se activa donde
+     overflow-x:auto está activo (ver @media max-width:900px) --
+     actualizarFadeTabla() calcula scrollWidth/clientWidth en tiempo real y
+     no marca nada scrollable si no lo es, así que en desktop simplemente no
+     se ve. Desaparece sola al llegar al final (clase .scrolled-end). */
+  .table-wrap::after{
+    content:"";
+    position:absolute; top:0; right:0; bottom:0; width:32px;
+    background:linear-gradient(to right, transparent, var(--ink) 75%);
+    pointer-events:none;
+    opacity:1;
+    transition:opacity .15s ease;
+  }
+  .table-wrap.scrolled-end::after{ opacity:0; }
   table{width:100%; border-collapse:collapse;}
   thead th{
-    position:sticky; top:150px; z-index:10;
+    position:sticky; top:calc(var(--header-h) + var(--filters-h)); z-index:10;
     background:var(--ink);
     text-align:left;
     font-family:'Barlow Condensed';
@@ -750,6 +780,15 @@
 
     .filters{ position:static; padding:14px 16px; }
     thead th{ position:static; }
+    /* thead th.sticky-col (la celda "Jugador" de la esquina) tiene MÁS
+       especificidad que .sticky-col (0,1,2 vs 0,1,0), así que gana el pulso
+       a "thead th{position:static}" de aquí arriba y se queda con
+       position:sticky heredando el top:calc(...) de escritorio -- acaba
+       flotando a media pantalla, pegada verticalmente, mientras el resto de
+       la cabecera sí se comporta como estática. Sin top no hay a qué
+       pegarse en vertical, así que sigue enganchada solo en horizontal
+       (left:0, igual que las celdas normales del cuerpo). */
+    thead th.sticky-col{ top:auto; }
 
     #myteam-page .myteam-header{ padding:18px 16px 14px; }
     .myteam-body{ padding:20px 16px 50px; }
@@ -759,7 +798,26 @@
     .bench-group + .bench-group{ border-top:none; padding-top:0; }
     #btn-myteam-only{ width:100%; }
 
-    .table-wrap{ padding: 4px 0 40px; }
+    /* overflow-x:auto contiene el scroll horizontal DENTRO de la tabla en
+       vez de desbordar la página entera (el body se hacía más ancho que el
+       viewport, arrastrando header/filtros consigo, y los `position:fixed`
+       -- p.ej. el modal de evolución de precio -- se posicionaban contra
+       ese viewport "de layout" ensanchado en vez del que se ve en pantalla,
+       apareciendo descentrados).
+       overflow-y:clip es obligatorio aquí, no cosmético: por la spec de CSS
+       Overflow, un overflow-x distinto de "visible" fuerza a "auto" el
+       overflow-y si no se fija explícitamente -- eso convertiría a
+       .table-wrap, sin querer, en el contenedor de scroll (también en
+       vertical) del que cuelgan los sticky de dentro. Aquí abajo es
+       INOFENSIVO porque thead th ya es position:static en este breakpoint
+       (regla de más arriba) -- no hay ningún sticky vertical al que pueda
+       "robarle" la referencia de scroll.
+       IMPORTANTE: esto NO puede ser global (fuera de este @media). En
+       desktop la cabecera SÍ está enganchada al scroll de la PÁGINA
+       (position:sticky más abajo), y este mismo overflow en .table-wrap se
+       la rompería -- pasó de verdad: la cabecera dejaba de pegarse arriba y
+       aparecía una fila "fantasma" solapada justo encima de ella. */
+    .table-wrap{ padding: 4px 0 40px; overflow-x:auto; overflow-y:clip; }
     table{ min-width: 720px; }
 
     .compare-header{ padding:18px 16px 14px; }
@@ -785,6 +843,14 @@
     .price-range input[type=number]{ width:44%; }
     select{ flex:1 1 auto; min-width:0; }
     .count-pill{ width:100%; margin-left:0; text-align:right; }
+    /* Los botones de filtro (Favoritos, Mi equipo, Mercado de mi liga...)
+       antes caían cada uno en su propia línea completa -- entre eso y el
+       resto de campos, había que hacer scroll una pantalla entera antes de
+       ver un solo jugador. En parejas de 2 por fila se reduce esa altura a
+       la mitad. #btn-myteam-only se queda a ancho completo (regla de más
+       arriba, por su mayor especificidad de id) porque es el toggle
+       principal de esta sección. */
+    .filters > button.ghost:not(#btn-myteam-only){ flex:1 1 calc(50% - 4px); }
 
     thead th, td{ padding:10px 10px; font-size:13px; }
     .player-avatar{ width:38px; height:38px; }
@@ -1289,8 +1355,14 @@ async function loadPlayers() {
     els.banner.classList.remove('show');
     populateTeamFilter();
     updateScoreboard();
+    // Se espera a que cargue el roster de tu liga (quién tiene fichado a
+    // quién) ANTES del primer render: el mercado ahora solo muestra
+    // jugadores libres, así que si se pintara antes aparecerían un instante
+    // los ya fichados y luego desaparecerían de golpe al llegar el roster.
+    // loadLeagueRoster() nunca lanza (atrapa sus propios errores), así que
+    // el render de más abajo siempre se ejecuta pase lo que pase.
+    await loadLeagueRoster();
     render();
-    loadLeagueRoster();
   } catch (e) {
     console.error(e);
     els.banner.classList.add('show');
@@ -1500,6 +1572,7 @@ function escapeHtml(str) {
 // ---------- Mercado de mi liga (tabla league_market) ----------
 let leagueMarket = [];
 let leagueMarketLoaded = false;
+let leagueMarketOcultas = 0; // ofertas de managers + entrenadores, ocultas a propósito (ver esJugadorLibre)
 
 function formatExpiry(iso) {
   if (!iso) return { text: '—', cls: 'normal' };
@@ -1514,6 +1587,23 @@ function formatExpiry(iso) {
   return { text: `${rel} · ${dateTxt}`, cls };
 }
 
+// La API oficial devuelve dos tipos de oferta en el mismo endpoint de
+// mercado, distinguidos por el campo "discr" del objeto crudo (guardado
+// completo en la columna `raw`, ver sync_league_market.py):
+//   - "marketPlayerLeague": jugador SIN dueño, puesto a la venta por la
+//     propia liga (lo que coloquialmente es un jugador "libre"). No trae
+//     playerTeam ni sellerTeam.
+//   - "marketPlayerTeam": jugador que YA tiene manager, puesto a la venta
+//     por su propio dueño (oferta de cláusula) -- trae sellerTeam con el
+//     manager que lo vende.
+// Aquí solo interesan los libres -- a petición del usuario (24/08/2026), lo
+// que otros managers ponen a la venta no debe aparecer en esta página. Los
+// entrenadores (position "Entrenador") también se ocultan -- a petición del
+// usuario (24/08/2026), no son fichables como jugadores y no aportan aquí.
+function esJugadorLibre(p) {
+  return !!(p.raw && p.raw.discr === 'marketPlayerLeague') && p.position !== 'Entrenador';
+}
+
 async function loadLeagueMarket() {
   if (!supabaseClient) return;
   els.leagueMarketSub.textContent = 'Cargando...';
@@ -1523,7 +1613,9 @@ async function loadLeagueMarket() {
       .select('*')
       .order('expiration_date', { ascending: true });
     if (error) throw error;
-    leagueMarket = data || [];
+    const todas = data || [];
+    leagueMarket = todas.filter(esJugadorLibre);
+    leagueMarketOcultas = todas.length - leagueMarket.length;
     leagueMarketLoaded = true;
     renderLeagueMarket();
   } catch (e) {
@@ -1542,8 +1634,12 @@ function renderLeagueMarket() {
   if (leagueMarket.length === 0) {
     els.leagueMarketRows.innerHTML = '';
     els.leagueMarketEmpty.style.display = 'block';
-    els.leagueMarketEmptyMsg.textContent = 'No se encontraron ofertas en el mercado de tu liga.';
-    els.leagueMarketSub.textContent = '0 jugadores en venta';
+    els.leagueMarketEmptyMsg.textContent = leagueMarketOcultas > 0
+      // Distingue "no hay datos" de "hay datos pero ahora mismo nadie libre
+      // está en venta" -- si no, parecería que el sync ha fallado.
+      ? `Ahora mismo no hay jugadores libres en el mercado (sí hay ${leagueMarketOcultas} ofertas de otros managers y/o entrenadores, pero esas no se muestran aquí).`
+      : 'No se encontraron ofertas en el mercado de tu liga.';
+    els.leagueMarketSub.textContent = '0 jugadores libres en venta';
     return;
   }
   els.leagueMarketEmpty.style.display = 'none';
@@ -1553,7 +1649,8 @@ function renderLeagueMarket() {
     return t && (!max || t > max) ? t : max;
   }, null);
   els.leagueMarketSub.textContent =
-    `${leagueMarket.length} jugadores en venta` +
+    `${leagueMarket.length} jugadores libres en venta` +
+    (leagueMarketOcultas > 0 ? ` (+${leagueMarketOcultas} de managers/entrenadores, no mostradas)` : '') +
     (lastSync ? ` · Última sincronización: ${lastSync.toLocaleString('es-ES')}` : '');
 
   els.leagueMarketRows.innerHTML = leagueMarket.map(p => {
@@ -2221,6 +2318,73 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.classList.remove('show');
   });
+});
+
+// ---------- Offsets dinámicos de los sticky (header / filtros / cabecera
+// de tabla) ----------
+// header y .filters van con position:sticky apilados uno debajo del otro
+// (para que buscador y cabecera de tabla sigan visibles en un scroll largo
+// de la lista). Sus alturas reales varían: el header puede partirse en 2
+// líneas en pantallas estrechas, y .filters casi siempre ocupa más de una
+// línea porque lleva buscador + 3 selects + rango de precio + 5 botones +
+// el contador, y eso no cabe en una sola fila salvo en desktop ancho. Antes
+// esas alturas estaban hardcodeadas en el CSS (top:96px / top:150px); en
+// cuanto .filters pasaba a 2 líneas, la cabecera de la tabla quedaba
+// posicionada por debajo de donde .filters terminaba de verdad, montándose
+// encima de las primeras filas al hacer scroll. Medimos las alturas reales
+// con ResizeObserver y las publicamos como custom properties en :root para
+// que el CSS (top:var(--header-h) / top:calc(var(--header-h) + var(--filters-h)))
+// se recalcule solo, incluso si la ventana cambia de tamaño o el navegador
+// hace zoom.
+function actualizarOffsetsSticky() {
+  const headerEl = document.querySelector('header');
+  const filtersEl = document.querySelector('.filters');
+  if (headerEl) {
+    document.documentElement.style.setProperty('--header-h', headerEl.offsetHeight + 'px');
+  }
+  if (filtersEl) {
+    document.documentElement.style.setProperty('--filters-h', filtersEl.offsetHeight + 'px');
+  }
+}
+(function initOffsetsSticky() {
+  const headerEl = document.querySelector('header');
+  const filtersEl = document.querySelector('.filters');
+  if (window.ResizeObserver) {
+    const stickyObserver = new ResizeObserver(actualizarOffsetsSticky);
+    if (headerEl) stickyObserver.observe(headerEl);
+    if (filtersEl) stickyObserver.observe(filtersEl);
+  } else {
+    // Fallback para navegadores sin ResizeObserver.
+    window.addEventListener('resize', actualizarOffsetsSticky);
+  }
+  actualizarOffsetsSticky();
+})();
+
+// ---------- Aviso de scroll horizontal en las tablas ----------
+// .table-wrap fuerza scroll horizontal en pantallas estrechas (la tabla
+// tiene min-width para no aplastar columnas, ver RESPONSIVE en el CSS). Sin
+// pista visual esto se ve como si la tabla simplemente cortara columnas
+// (precio, estado...) por la derecha -- el degradado (ver CSS, clase
+// .scrolled-end) avisa de que hay más deslizando, y desaparece solo al
+// llegar al final. Las tres tablas de la app (mercado, mercado de tu liga,
+// finanzas) comparten la clase .table-wrap, así que esto las cubre todas.
+function actualizarFadeTabla(wrap) {
+  const puedeScrollear = wrap.scrollWidth > wrap.clientWidth + 1;
+  const alFinal = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1;
+  wrap.classList.toggle('scrolled-end', !puedeScrollear || alFinal);
+}
+document.querySelectorAll('.table-wrap').forEach(wrap => {
+  actualizarFadeTabla(wrap);
+  wrap.addEventListener('scroll', () => actualizarFadeTabla(wrap), { passive: true });
+  if (window.ResizeObserver) new ResizeObserver(() => actualizarFadeTabla(wrap)).observe(wrap);
+  // Las tablas se repintan reemplazando el innerHTML de su <tbody> (ver
+  // render() / renderLeagueMarket() / renderFinances()) -- un
+  // MutationObserver detecta esos repintados (cambia scrollWidth al filtrar
+  // o cambiar de datos) sin tener que tocar cada función de render.
+  const tbody = wrap.querySelector('tbody');
+  if (tbody && window.MutationObserver) {
+    new MutationObserver(() => actualizarFadeTabla(wrap)).observe(tbody, { childList: true });
+  }
 });
 
 // precargar inputs si ya había conexión guardada
